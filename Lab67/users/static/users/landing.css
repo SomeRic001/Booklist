@@ -44,20 +44,20 @@ body {
 }
 
 #btncontainer .btn.login-btn {
-    background-color: #4f46e5;
+    background-color: #46c3e5;
 }
 
 #btncontainer .btn.login-btn:hover {
-    background-color: #4338ca;
+    background-color: #46c3a3;
     transform: translateY(-1px);
 }
 
 #btncontainer .btn.logout-btn {
-    background-color: #ef4444;
+    background-color: #e54646;
 }
 
 #btncontainer .btn.logout-btn:hover {
-    background-color: #dc2626;
+    background-color: #d75206;
     transform: translateY(-1px);
 }
 
@@ -87,7 +87,7 @@ body {
     padding: 10px 20px;
     border-radius: 8px;
     border: none;
-    background-color: #4f46e5;
+    background-color: #46c3e5;
     color: #fff;
     font-weight: bold;
     cursor: pointer;
@@ -95,7 +95,7 @@ body {
 }
 
 #search-bar button:hover {
-    background-color: #4338ca;
+    background-color: #46c3a3;
 }
 
 

@@ -51,7 +51,7 @@ form input[type="text"]:focus,
 form input[type="email"]:focus,
 form input[type="password"]:focus {
     outline: none;
-    border-color: #4f46e5;
+    border-color: #46c3e5;
     box-shadow: 0 0 5px rgba(79, 70, 229, 0.3);
 }
 
@@ -60,7 +60,7 @@ form input[type="submit"] {
     width: 100%;
     padding: 12px;
     margin-top: 10px;
-    background-color: #4f46e5;
+    background-color: #46c3e5;
     border: none;
     border-radius: 8px;
     color: #ffffff;
@@ -72,18 +72,7 @@ form input[type="submit"] {
 }
 
 form input[type="submit"]:hover {
-    background-color: #4338ca;
+    background-color: #46c3e5;
     transform: translateY(-2px);
 }
 
-.error-message {
-    color: #b91c1c;
-    background-color: #fee2e2;
-    border: 1px solid #fca5a5;
-    padding: 8px 12px;
-    border-radius: 6px;
-    margin-bottom: 12px;
-    font-size: 14px;
-    width: 100%;
-    text-align: center;
-}
