@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ username }}'s Profile - OurBookList</title>
+    <link rel="stylesheet" href="{% static 'users/profile.css' %}">
+</head>
+<body>
+    <div id="profile-container">
+        <header>
+    <h1>Welcome, {{ username }}!</h1>
+    <div class="header-buttons">
+        <a href="{% url 'user:landing' %}" class="btn back-btn">Back to Search</a>
+        <a href="{% url 'user:logout' %}" class="btn logout-btn">Logout</a>
+    </div>
+</header>
+
+        {% if user_books %}
+            <div class="books-grid">
+                {% for ub in user_books %}
+                    <div class="book-card">
+                        <img src="{{ ub.book.cover_url }}" alt="{{ ub.book.title }}">
+                        <h3>{{ ub.book.title }}</h3>
+                        <p>Author: {{ ub.book.author }}</p>
+                        <p>Status: {{ ub.get_status_display }}</p>
+                        <p>{{ ub.book.synopsis|default:"No synopsis available" }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>You haven't added any books yet.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

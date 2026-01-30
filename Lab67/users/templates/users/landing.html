@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OurBookList</title>
+    <link rel="stylesheet" href="{% static 'users/landing.css' %}">
+</head>
+<body>
+    <div id="uppercontainer">
+        <h1>OurBookList</h1>
+        <div id="btncontainer">
+            {% if logged_in %}
+                <span id="welcome-text">Hello, {{ username }}!</span>
+                <a href="{% url 'user:my_books' %}" class="btn login-btn">My Books</a>
+                <a href="{% url 'user:logout' %}" class="btn logout-btn">Logout</a>
+            {% else %}
+                <a href="{% url 'user:login' %}" class="btn login-btn">LogIn</a>
+                <a href="{% url 'user:signup' %}" class="btn login-btn">SignUp</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <form id="search-bar" method="get">
+        <input type="text" name="q" placeholder="Search for books..." value="{{ query }}">
+        <button type="submit">Search</button>
+    </form>
+
+    <div id="books-container">
+        {% for book in books %}
+            <div class="book-card">
+                <img src="{{ book.cover_url }}" alt="{{ book.title }}">
+                <div class="book-info">
+                    <h2>{{ book.title }}</h2>
+                    <p class="author">{{ book.author }}</p>
+                    <p class="synopsis">{{ book.synopsis }}</p>
+
+                    {% if logged_in %}
+                    <form action="{% url 'user:add_to_list' %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="ol_key" value="{{ book.ol_key }}">
+                        <input type="hidden" name="title" value="{{ book.title }}">
+                        <input type="hidden" name="author" value="{{ book.author }}">
+                        <input type="hidden" name="cover_url" value="{{ book.cover_url }}">
+                        <select name="status">
+                            <option value="reading">Reading</option>
+                            <option value="completed">Completed</option>
+                            <option value="wishlist">Wishlist</option>
+                        </select>
+                        <button type="submit">Add to List</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignUp</title>
+    <script src="{% static 'users/signup.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'users/styles.css' %}">
+</head>
+<body data-error = "{{error|default:''|escapejs}}">
+    <h1>Sign Up</h1><br>
+    <form action="{% url 'user:signup' %}" method="post">
+        {% csrf_token %}
+        <input type="text" name="Username" placeholder="Username" required>
+        <input type="email" name="Email" placeholder="Email Address" required>
+        <input type="password" name="Password" placeholder = "Create a Password" required>
+        <input type="submit" value="Sign Up">
+    </form>
+</body>
+</html>
