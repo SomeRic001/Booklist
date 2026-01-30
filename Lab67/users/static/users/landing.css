@@ -9,6 +9,10 @@ body {
     flex-direction: column;
 }
 
+#logo{
+    text-decoration: none;
+    color: black;
+}
 
 #uppercontainer {
     display: flex;

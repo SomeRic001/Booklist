@@ -9,7 +9,7 @@
 </head>
 <body>
     <div id="uppercontainer">
-        <h1>OurBookList</h1>
+        <h1><a href = "{% url 'user:landing' %}" id ="logo">OurBookList</a></h1>
         <div id="btncontainer">
             {% if logged_in %}
                 <span id="welcome-text">Hello, {{ username }}!</span>

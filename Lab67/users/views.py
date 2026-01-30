@@ -4,20 +4,24 @@ from django.contrib import messages
 import bcrypt
 import requests
 from .models import Book, UserBook
+import random
 
 def landing(request):
-    query = request.GET.get('q','')
+    query = request.GET.get('q', '')
     books = []
+    logged_in = request.session.get('logged_in', False)
     username = None
 
-    user_id = request.session.get('user_id')
-    if user_id:
+    if logged_in:
+        user_id = request.session.get('user_id')
         with connection.cursor() as cursor:
-            cursor.execute("SELECT user_name FROM lab_user WHERE user_id=%s", [user_id])
+            cursor.execute(
+                "SELECT user_name FROM lab_user WHERE user_id = %s",
+                [user_id]
+            )
             row = cursor.fetchone()
             if row:
                 username = row[0]
-
     if query:
         url = f"https://openlibrary.org/search.json?q={query}"
         try:
@@ -25,50 +29,52 @@ def landing(request):
             if response.status_code == 200:
                 data = response.json()
                 for book in data.get('docs', [])[:12]:
-                    title = book.get('title')
-                    author = ', '.join(book.get('author_name', ['Unknown']))
                     cover_id = book.get('cover_i')
-                    cover_url = f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg" if cover_id else "/static/users/book-placeholder.jpg"
+                    cover_url = (
+                        f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg"
+                        if cover_id else "/static/users/book-placeholder.jpg"
+                    )
 
-                    work_key = book.get('key')
-                    synopsis = ""
-                    if work_key:
-                        work_url = f"https://openlibrary.org{work_key}.json"
-                        try:
-                            work_resp = requests.get(work_url, timeout=3)
-                            if work_resp.status_code == 200:
-                                work_data = work_resp.json()
-                                if 'description' in work_data:
-                                    if isinstance(work_data['description'], dict):
-                                        synopsis = work_data['description'].get('value','')
-                                    else:
-                                        synopsis = work_data['description']
-                        except requests.RequestException:
-                            synopsis = ""
                     books.append({
-                        'ol_key': work_key,
-                        'title': title,
-                        'author': author,
-                        'cover_url': cover_url,
-                        'synopsis': synopsis[:200] + ("..." if len(synopsis) > 200 else "")
+                        "ol_key": book.get("key"),
+                        "title": book.get("title"),
+                        "author": ", ".join(book.get("author_name", ["Unknown"])),
+                        "cover_url": cover_url,
+                        "synopsis": "",  
                     })
         except requests.RequestException as e:
-            print("API request failed:", e)
-    logged_in = request.session.get('logged_in', False)
-    username = None
-    if logged_in:
-        user_id = request.session.get('user_id')
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT user_name FROM lab_user WHERE user_id = %s", [user_id])
-            row = cursor.fetchone()
-            if row:
-                username = row[0]
+            print("Search API error:", e)
 
-    return render(request, 'users/landing.html', {
+    else:
+        api_url = "https://openlibrary.org/subjects/fantasy.json?limit=50"
+        try:
+            response = requests.get(api_url, timeout=5)
+            data = response.json()
+            works = data.get("works", [])
+            random_books = random.sample(works, min(50, len(works)))
+
+            for book in random_books:
+                cover_id = book.get("cover_id")
+                cover_url = (
+                    f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg"
+                    if cover_id else "/static/users/book-placeholder.jpg"
+                )
+
+                books.append({
+                    "ol_key": book.get("key"),
+                    "title": book.get("title"),
+                    "author": ", ".join(book.get("authors", [{}])[0].get("name", "Unknown")),
+                    "cover_url": cover_url,
+                    "synopsis": book.get("description", "") if isinstance(book.get("description"), str) else "",
+                })
+        except requests.RequestException as e:
+            print("Random API error:", e)
+
+    return render(request, "users/landing.html", {
         "books": books,
         "query": query,
         "logged_in": logged_in,
-        "username": username
+        "username": username,
     })
 
 def profile(request):
