@@ -15,13 +15,11 @@ def landing(request):
     if logged_in:
         user_id = request.session.get('user_id')
         with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT user_name FROM lab_user WHERE user_id = %s",
-                [user_id]
-            )
+            cursor.execute("SELECT user_name FROM lab_user WHERE user_id = %s", [user_id])
             row = cursor.fetchone()
             if row:
                 username = row[0]
+
     if query:
         url = f"https://openlibrary.org/search.json?q={query}"
         try:
@@ -29,44 +27,72 @@ def landing(request):
             if response.status_code == 200:
                 data = response.json()
                 for book in data.get('docs', [])[:12]:
+                    title = book.get('title', 'No Title')
+                    authors = book.get('author_name', ['Unknown'])
+                    author = ', '.join(authors)
                     cover_id = book.get('cover_i')
                     cover_url = (
                         f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg"
                         if cover_id else "/static/users/book-placeholder.jpg"
                     )
 
+                    synopsis = ""
+                    work_key = book.get('key')
+                    if work_key:
+                        try:
+                            work_resp = requests.get(f"https://openlibrary.org{work_key}.json", timeout=3)
+                            if work_resp.status_code == 200:
+                                work_data = work_resp.json()
+                                desc = work_data.get('description')
+                                if isinstance(desc, dict):
+                                    synopsis = desc.get('value','')
+                                elif isinstance(desc, str):
+                                    synopsis = desc
+                        except requests.RequestException:
+                            synopsis = ""
+
                     books.append({
-                        "ol_key": book.get("key"),
-                        "title": book.get("title"),
-                        "author": ", ".join(book.get("author_name", ["Unknown"])),
+                        "ol_key": work_key,
+                        "title": title,
+                        "author": author,
                         "cover_url": cover_url,
-                        "synopsis": "",  
+                        "synopsis": synopsis[:200] + ("..." if len(synopsis) > 200 else "")
                     })
         except requests.RequestException as e:
             print("Search API error:", e)
 
     else:
-        api_url = "https://openlibrary.org/subjects/fantasy.json?limit=50"
+       
         try:
-            response = requests.get(api_url, timeout=5)
-            data = response.json()
-            works = data.get("works", [])
-            random_books = random.sample(works, min(50, len(works)))
+            response = requests.get("https://openlibrary.org/subjects/fantasy.json?limit=50", timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                works = data.get("works", [])
+                random_books = random.sample(works, min(50, len(works)))
 
-            for book in random_books:
-                cover_id = book.get("cover_id")
-                cover_url = (
-                    f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg"
-                    if cover_id else "/static/users/book-placeholder.jpg"
-                )
+                for book in random_books:
+                    title = book.get('title', 'No Title')
+                    authors_list = book.get('authors', [{'name':'Unknown'}])
+                    author = ', '.join([a.get('name', 'Unknown') for a in authors_list])
+                    cover_id = book.get("cover_id")
+                    cover_url = (
+                        f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg"
+                        if cover_id else "/static/users/book-placeholder.jpg"
+                    )
 
-                books.append({
-                    "ol_key": book.get("key"),
-                    "title": book.get("title"),
-                    "author": ", ".join(book.get("authors", [{}])[0].get("name", "Unknown")),
-                    "cover_url": cover_url,
-                    "synopsis": book.get("description", "") if isinstance(book.get("description"), str) else "",
-                })
+                    synopsis = book.get('description', '')
+                    if isinstance(synopsis, dict):
+                        synopsis = synopsis.get('value','')
+                    elif not isinstance(synopsis, str):
+                        synopsis = ''
+
+                    books.append({
+                        "ol_key": book.get("key"),
+                        "title": title,
+                        "author": author,
+                        "cover_url": cover_url,
+                        "synopsis": synopsis[:200] + ("..." if len(synopsis) > 200 else "")
+                    })
         except requests.RequestException as e:
             print("Random API error:", e)
 
@@ -76,6 +102,7 @@ def landing(request):
         "logged_in": logged_in,
         "username": username,
     })
+
 
 def profile(request):
     user_id = request.session.get('user_id')
@@ -90,6 +117,7 @@ def profile(request):
     user_books = UserBook.objects.filter(user_id=user_id)
 
     return render(request, "users/profile.html", {"username": username, "user_books": user_books})
+
 
 def login(request):
     if request.method == 'POST':
@@ -110,7 +138,6 @@ def login(request):
         if not bcrypt.checkpw(login_pw.encode('utf-8'), password_hash.encode('utf-8')):
             return render(request, "users/login.html", {"error": "Invalid username or password"})
 
-        # Set session
         request.session['user_id'] = user_id
         request.session['logged_in'] = True
 
